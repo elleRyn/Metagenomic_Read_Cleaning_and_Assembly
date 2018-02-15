@@ -1,3 +1,15 @@
+This is a workflow for cleaning Illumina paired end 150 metagenomic shotgun reads and 
+assembling them into contigs. The contigs were then used in a Hi-C cluster analysis but 
+this cleaning and assembly pipeline can be used whenever cleaned or assembled reads are 
+needed for any analysis.
+
+Project website and data repository: [Using Hi-C to Track Plasmids and Antibiotic
+Resistance in Microbial Communities](https://osf.io/gr2d7/)
+
+By Elle J. Kohler, kohl5779@vandals.uidaho.edu
+
+Project paper: link and citation coming soon
+
 ## Read Cleaning
 The sequenced metagenomic shotgun reads were processed/cleaned prior to assembling them 
 into contigs. The cleaning process consisted of three steps: removing duplicates introduced
@@ -147,7 +159,8 @@ two most important of which are: **contigs.fasta** and **spades.log**. The file
 the run failed or finished. The commands:
 
 ```
-> head -n 2 contigs.fasta 
+> head -n 2 contigs.fasta
+ 
 >NODE_1_length_648482_cov_282.424
 CCGAAGCCCGCCGATGCGGGCTTCGGCCGTTCCGGGCCCGCCTTTTCGGCGGGCCTTTGC
 ```
@@ -155,35 +168,43 @@ and:
 
 ```
 > tail -n 2 contigs.fasta 
+
 >NODE_3179_length_56_cov_607
 CGGGGTGTGTAGGGCGAATAACGCCATGGGCGTTATCCGCCGATGTCGCGGATGAG
 ```
 
-will give the outputs shown and can be used to get a quick idea of how well the assembly worked. The reads from Community 4a
+will give the outputs shown and can be used to get a quick idea of how well the assembly 
+worked. The reads from Community 4a
 assembled into 3179 total contigs, the longest of which was 648482bp. The shortest contigs 
 were only 56bp and not useful for further analysis. Only those contigs longer than 500bp
 were kept for further analysis.
 
-The contigs longer than 500bp could be pulled out of the full contig file in multiple ways. 
+### Assembly Statistics
+The contigs longer than 500bp could be separated into a separate file in multiple ways. 
 I used the executable script contiglength.py (note that this only works for contig files in
-the output format used by SPAdes) to pull out a list of the length of the each contig 
+the output format used by SPAdes) to create a list containing the length of the each contig 
 using the command:
 
 ```> python2.7 contiglength.py contigs.fasta > length4a.txt```
 
 I used the file **length4a.txt** to compute some basic statistics on the assembly in R. 
 The script contigstats.R can be used to do this. It will calculate the median and mean 
-contig lengths that were assembled as well as the total number of base pairs assembled. 
+contig lengths that were assembled (the higher these numbers are, the better the assembly) 
+as well as the total number of base pairs assembled (want this number to be close to the 
+combined length of each of the replicons present in the sample. For Community 4a, this 
+number would be ~17.29Mb and we recovered 17.296Mb. This expected value would not be known 
+for uncharacterized samples however.). 
 Scrolling through the list of contig lengths in R also makes it easy to find how many contigs 
 are longer than 500bp. For Community 4a, 474 of the contigs were longer than 500bp. These 
 contigs can be saved into a separate file using the command:
 
 ```> sed '/>NODE_475_/Q' contigs.fasta > longcontigs.fasta```
 
-This command is again unique to the contig output format used by SPAdes but could be adjusted 
-to other output formats. It takes all of the contigs before contig 475 and puts them into 
-a new file called **longcontigs.fasta**. This can be used for further downstream analysis. 
-If running a Hi-C analysis, save this file and use it for the next step in the pipeline 
-which is cleaning the Hi-C reads in preparation for contig clustering based on Hi-C linkages.
+This command is again unique to the contig output format used by SPAdes but could be easily 
+adjusted to other output formats. It takes all of the contigs before contig (NODE) 475 and 
+copies them into a new file called **longcontigs.fasta**. This file can be used for further 
+downstream analysis. If running a Hi-C analysis, save this file and use it for the next 
+step in the pipeline which is [cleaning the Hi-C reads](https://osf.io/7n8rx/wiki/home/) 
+in preparation for contig clustering based on Hi-C linkages.
 
 
