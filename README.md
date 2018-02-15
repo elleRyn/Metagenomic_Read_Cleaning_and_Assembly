@@ -7,7 +7,7 @@ into contigs. The cleaning process consisted of three steps: removing duplicates
  reads for Community 4a can be downloaded [here](https://osf.io/pvj64/) and used to 
  duplicate the results.
  
-#### Remove Duplicates
+### Remove Duplicates
 The metagenomic shotgun reads were sorted using Super-Deduper to remove PCR duplicates 
 introduced by the PCR amplification required prior to sequencing. 
 [Super-Deduper](https://github.com/dstreett/Super-Deduper) is an open source application 
@@ -23,7 +23,7 @@ as well as the following output to screen:
 This shows how many read pairs were present, 25496938, and how many duplicates were 
 discarded, 1971431.
 
-#### Merge Overlapping Reads
+### Merge Overlapping Reads
 The output from Super-Deduper was used as input for [Flash2](https://github.com/dstreett/FLASH2). 
 Flash2 merges paired-end reads that were sequenced from DNA fragments shorter than the 
 combined length of the reads. For example, when a 250bp sequence fragment is sequenced 
@@ -58,7 +58,7 @@ longer had a pair. Flash2 also produced the following output to screen at the en
 The most important statistic here is the percentage of reads that overlapped and were 
 combined: 23.61%. Flash2 also discarded a very small percentage (0.01%) due to low quality.
 
-#### Trim Low Quality Ends
+### Trim Low Quality Ends
 [Sickle](https://github.com/najoshi/sickle) was used to trim both the overlapped and 
 non-overlapped reads output by flash2. Reads produced from most modern sequencing technologies 
 have progressively lower quality approaching the 3'-end and sometimes the 5'-end as well. 
@@ -103,8 +103,7 @@ removed from each end of the input reads.
 Sickle se was run on the file of single overlapped reads output by flash2. It was run with
 the same parameters as sickle pe:
 
-```> sickle se -n --length-threshold 75 --qual-threshold 20 --qual-type sanger --fastq-file
- out.extendedFrags.fastq --output-file cleaned_SE2.fastq```
+```> sickle se -n --length-threshold 75 --qual-threshold 20 --qual-type sanger --fastq-file out.extendedFrags.fastq --output-file cleaned_SE2.fastq```
  
 It output the file: **cleaned_SE2.fastq**, as well as the screen output:
 
@@ -123,13 +122,12 @@ one file of unpaired reads in preparation for assembly:
 
 ```> cat cleaned_SE1.fastq cleaned_SE2.fastq > cleaned_SE.fastq```
 
-### Metagenomic Assembly
+## Metagenomic Assembly
 The cleaned reads were assembled into longer contiguous sequences (contigs) using the 
 assembler [SPAdes version 3.9.0](http://cab.spbu.ru/software/spades/). It was run in meta
 mode with the default k-mer sizes of 21, 33, and 55.
 
-```> spades.py --meta -1 cleaned_PE1.fastq -2 cleaned_PE2.fastq -s cleaned_SE.fastq -o
-spades_output/```
+```> spades.py --meta -1 cleaned_PE1.fastq -2 cleaned_PE2.fastq -s cleaned_SE.fastq -o spades_output/```
 
 This allowed it to use up to 40 threads and 400Gb of memory and it took ~5.5 hours to run.
 The output is a directory called **spades_output**. This includes a variety of files, the 
@@ -137,21 +135,42 @@ two most important of which are: **contigs.fasta** and **spades.log**. The file
 **spades.log** gives information about the run including how long the run took and whether
 the run failed or finished. The commands:
 
-```head -n 2 contigs.fasta 
+```> head -n 2 contigs.fasta 
 >NODE_1_length_648482_cov_282.424
 CCGAAGCCCGCCGATGCGGGCTTCGGCCGTTCCGGGCCCGCCTTTTCGGCGGGCCTTTGC
 ```
 and:
-```tail -n 2 contigs.fasta 
+
+```> tail -n 2 contigs.fasta 
 >NODE_3179_length_56_cov_607
 CGGGGTGTGTAGGGCGAATAACGCCATGGGCGTTATCCGCCGATGTCGCGGATGAG
 ```
 
-can be used to get a quick idea of how well the assembly worked. The reads from Community 4a
+will give the outputs shown and can be used to get a quick idea of how well the assembly worked. The reads from Community 4a
 assembled into 3179 total contigs, the longest of which was 648482bp. The shortest contigs 
 were only 56bp and not useful for further analysis. Only those contigs longer than 500bp
 were kept for further analysis.
 
+The contigs longer than 500bp could be pulled out of the full contig file in multiple ways. 
+I used the executable script contiglength.py (note that this only works for contig files in
+the output format used by SPAdes) to pull out a list of the length of the each contig 
+using the command:
 
+```> python2.7 contiglength.py contigs.fasta > length4a.txt```
+
+I used the file **length4a.txt** to compute some basic statistics on the assembly in R. 
+The script contigstats.R can be used to do this. It will calculate the median and mean 
+contig lengths that were assembled as well as the total number of base pairs assembled. 
+Scrolling through the list of contig lengths in R also makes it easy to find how many contigs 
+are longer than 500bp. For Community 4a, 474 of the contigs were longer than 500bp. These 
+contigs can be saved into a separate file using the command:
+
+```> sed '/>NODE_475_/Q' contigs.fasta > longcontigs.fasta```
+
+This command is again unique to the contig output format used by SPAdes but could be adjusted 
+to other output formats. It takes all of the contigs before contig 475 and puts them into 
+a new file called **longcontigs.fasta**. This can be used for further downstream analysis. 
+If running a Hi-C analysis, save this file and use it for the next step in the pipeline 
+which is cleaning the Hi-C reads in preparation for contig clustering based on Hi-C linkages.
 
 
