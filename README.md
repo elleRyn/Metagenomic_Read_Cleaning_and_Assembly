@@ -18,7 +18,8 @@ into contigs. The cleaning process consisted of three steps: removing duplicates
  power to run them quickly. The commands used to run each program are given as 
  well as some sample outputs for [Community 4a](https://osf.io/zacf7/). The metagenomic shotgun 
  reads for Community 4a can be downloaded [here](https://osf.io/pvj64/) and used to run 
- this tutorial and duplicate the results.
+ this tutorial and duplicate the results. Remember that depending on what directory you 
+ are running your analysis from, paths to the files may need to be specified in your commands.
  
 ### 1. Remove Duplicates
 The metagenomic shotgun reads were first sorted using Super-Deduper to remove PCR duplicates 
@@ -206,5 +207,3 @@ copies them into a new file called **longcontigs.fasta**. This file can be used 
 downstream analysis. If running a Hi-C analysis, save this file and use it for the next 
 step in the pipeline which is [cleaning the Hi-C reads](https://osf.io/7n8rx/wiki/home/) 
 in preparation for contig clustering based on Hi-C linkages.
-
-
